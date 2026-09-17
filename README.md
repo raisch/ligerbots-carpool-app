@@ -1,6 +1,6 @@
-# ligerbots-website-frontend
+# ligerbots-carpool-app
 
-This is the repo for the new Ligerbots website, a work in progress.
+This is the repo for the new Ligerbots carpool app, a work in progress.
 
 Contact Coach Rob on slack if you're interested in helping.
 
