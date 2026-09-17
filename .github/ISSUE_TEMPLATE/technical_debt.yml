@@ -1,0 +1,93 @@
+name: Technical debt or refactor
+description: Propose maintainability, architecture, cleanup, or refactoring work
+title: "[Tech Debt]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for internal improvements that primarily make the codebase easier, safer, or cheaper to maintain rather than adding a new user-facing capability.
+
+        Do not include passwords, authentication tokens, student/family contact information, addresses, or other sensitive personal data.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find a duplicate or closely related item.
+          required: true
+
+  - type: input
+    id: area
+    attributes:
+      label: Affected area
+      description: Identify the component, route, module, dependency, build process, or subsystem.
+      placeholder: e.g. src/lib/server, login flow, Directus client, test setup
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current technical problem
+      description: Describe the maintainability, complexity, reliability, duplication, architecture, or tooling problem.
+      placeholder: Explain the current state and why it creates ongoing cost or risk.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Why this matters
+      description: What developer, maintenance, reliability, testing, or operational impact does the current state have?
+      placeholder: Describe concrete costs, failure modes, or friction.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: Define what should be addressed and, when useful, what should explicitly remain out of scope.
+      placeholder: |
+        In scope:
+        - ...
+
+        Out of scope:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Possible approach
+      description: Optional. Describe an implementation direction, migration path, or refactoring strategy.
+      placeholder: A possible approach, not a required design.
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and dependencies
+      description: Note compatibility concerns, migration risks, dependencies, or areas that need regression testing.
+      placeholder: Describe anything that could make the change risky.
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that would make this work complete.
+      placeholder: |
+        - [ ] ...
+        - [ ] Existing behavior remains unchanged unless explicitly noted.
+        - [ ] Relevant tests pass or are added.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add code references, related issues, measurements, or other supporting information.

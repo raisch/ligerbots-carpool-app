@@ -1,0 +1,90 @@
+name: Documentation issue
+description: Report missing, incorrect, outdated, or confusing documentation
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the LigerBots carpool app documentation.
+
+        Please describe the documentation problem and the outcome you want. Do not include passwords, authentication tokens, student/family contact information, addresses, or other sensitive personal data.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find a duplicate or closely related documentation issue.
+          required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Documentation issue type
+      options:
+        - Missing documentation
+        - Incorrect documentation
+        - Outdated documentation
+        - Unclear or confusing documentation
+        - Broken link or reference
+        - Example or tutorial improvement
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link to the page, or provide the repository file/path and section if known.
+      placeholder: e.g. README.md > Bug Tracking, docs/setup.md, or a URL
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: Explain the documentation problem and why it may be misleading or difficult to use.
+      placeholder: Describe the current documentation and the issue with it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired documentation
+      description: What information should the documentation communicate instead?
+      placeholder: Describe the correct or clearer outcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording or example
+      description: Optional. Provide proposed wording, examples, screenshots, or diagrams if helpful.
+      placeholder: Add a suggested change if you have one.
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Primary audience
+      options:
+        - Users
+        - Parents or guardians
+        - Coaches or administrators
+        - Developers or maintainers
+        - Deployment or operations maintainers
+        - Multiple audiences
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add related issues, pull requests, screenshots, or other information that may help.
