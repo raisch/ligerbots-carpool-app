@@ -41,6 +41,7 @@
         userId?: string,
         isAdmin?: boolean,
         jwt: string,
+        isRegistered: boolean,
         existingRides?: {id: string}[],
         cars?: {
           allCars: import('$lib/server/event').RideRecord[],
@@ -63,28 +64,12 @@
   let destinationRideId = $state(/** @type {number | null} */ (null));
   let returnRideId = $state(/** @type {number | null} */ (null));
   
-  let existingRides = $derived(data?.existingRides?.map(ride => ride.id) || [])
+  let isRegistered = $derived(data?.isRegistered);
+  let existingRides = $derived(data?.existingRides);
 
   let cars = $derived(data?.cars ?? { allCars: [], userOwnedCars: [], userCanHaveCar: false });
   let allUsers = $derived(data?.users?.allUsers ?? []);
   let jwt = $derived(data?.jwt ?? '');
-
-
-  //console.log('existingRides', existingRides)
-  for (let trip of trips) {
-    if (!trip.item) continue;
-    console.log(trip.collection + '   ' + trip.item.id + '   ' + trip.item.rides.map(r => `[${r.id ?? '.'}->${r.item?.id ?? '.'}]`))
-    //console.log(trip)
-    if (trip.collection === 'destination_trip') {
-      let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
-      //console.log('found destination ride', ride)
-      if (ride?.item !== undefined) destinationRideId = parseInt(ride.item.id);
-    } else if (trip.collection === 'return_trip') {
-      let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
-      //console.log('found return ride', ride)
-      if (ride?.item !== undefined) returnRideId = parseInt(ride.item.id);
-    }
-  }
 
   /** @type {Record<string, any> | null} */
   let modifying = $state(null)
@@ -167,6 +152,7 @@
     try {
       await removeFromRide({user: data?.userId ?? '-1', event: event?.id ?? '-1', jwt})
       goto('#success-remove', {invalidateAll: true})
+      destinationRideId = returnRideId = null;
     } catch (e) {
       goto('#error-remove', {invalidateAll: true})
       alert('Error removing selections: ' + e)
@@ -204,11 +190,29 @@
 
   let isAdmin = $derived(data?.isAdmin);
   /** @type {number} */
-  let userId = 0;
+  let userId = $state(0);
 
   let confirmDelete = $state(false);
 
   onMount(() => {
+    for (let trip of trips) {
+      if (!trip.item) continue;
+      console.log(trip.collection + '   ' + trip.item.id + '   ' + trip.item.rides.map(r => `[${r.id ?? '.'}->${r.item?.id ?? '.'}]`))
+
+
+      //console.log(trip)
+      if (trip.collection === 'destination_trip') {
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
+        console.log('found destination ride', ride)
+        if (ride?.item !== undefined) destinationRideId = parseInt(ride.item.id);
+      } else if (trip.collection === 'return_trip') {
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
+        console.log('found return ride', ride)
+        if (ride?.item !== undefined) returnRideId = parseInt(ride.item.id);
+      }
+    }
+
+
     const user = sessionStorage.getItem('user');
 
 
@@ -233,7 +237,6 @@
       userId = parsedUser?.id ? parseInt(parsedUser.id) : userId;
     }
 
-
     if (userId) {
       for (let i = 0; i < trips?.length; i++) { // finding user's current rides
         const trip = trips[i];
@@ -244,11 +247,9 @@
             const rider = riders[k];
             if (parseInt(rider.item?.id || '-1') === userId) {
               if (trip.collection === 'destination_trip') {
-                destinationRideId = parseInt(ride.item.id);
-                previousDestinationRideId = parseInt(ride.item.id);
+                previousDestinationRideId = destinationRideId = parseInt(ride.item.id);
               } else if (trip.collection === 'return_trip') {
-                returnRideId = parseInt(ride.item.id);
-                previousReturnRideId = parseInt(ride.item.id);
+                previousReturnRideId = returnRideId = parseInt(ride.item.id);
               }
             }
           }
@@ -256,13 +257,11 @@
       }
     }
 
-    if (previousDestinationRideId && !previousReturnRideId) {
-      previousReturnRideId = -1;
-      returnRideId = -1;
+    if (isRegistered && returnRideId === null) {
+      previousReturnRideId = returnRideId = -1;
     }
-    if (!previousDestinationRideId && previousReturnRideId) {
-      previousDestinationRideId = -1;
-      destinationRideId = -1;
+    if (isRegistered && destinationRideId === null) {
+      previousDestinationRideId = destinationRideId = -1;
     }
 
   });
@@ -370,7 +369,7 @@
               <div style="justify-content: center; display: flex; gap: 10px; margin: 10px 0;">
                 <button class="undoChanges" disabled={previousDestinationRideId === null || previousReturnRideId === null || (destinationRideId === previousDestinationRideId && returnRideId === previousReturnRideId)} onclick={undoChanges}>Undo Changes</button>
                 <button class="confirm btn-primary" disabled={destinationRideId === null || returnRideId === null} onclick={updateSelections}>Confirm</button>
-                <button class="remove btn-danger" onclick={removeSelections} hidden={previousDestinationRideId === null && previousReturnRideId === null}>Cancel event registration</button>
+                <button class="remove btn-danger" onclick={removeSelections} hidden={previousDestinationRideId === null && previousReturnRideId === null && !isRegistered}>Cancel event registration</button>
               </div>
             {:else}
               <p>No trips available for this event.</p>

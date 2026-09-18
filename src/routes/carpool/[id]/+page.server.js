@@ -26,8 +26,11 @@ export async function load({ params, cookies }) {
     console.error(error)
   }
 
-  
-  const existingRides = await Rider.getRidesForRider(event?.id ?? '-1', userId)
+  // Is the user already signed up for the event?
+  const isRegistered = event?.attendees?.some(attendee => attendee.users_id.id === userId) ?? false;
+
+  // List of rides that the user is already in
+  const existingRides = event?.trips?.map(trip => trip.item.rides.filter(ride => ride.item.riders.some(rider => rider.item?.id === userId)).map(ride => ride.item.id)).flat() ?? [];
 
   const allCars = await Ride.getAllRides()
   const userOwnedCars = allCars.filter(ride => ride.driver?.some(driver => driver.id === userId))
@@ -38,5 +41,5 @@ export async function load({ params, cookies }) {
   const isAdmin = user?.is_admin ?? false;
 
 
-  return { event, userId, isAdmin, jwt, existingRides, cars: { allCars: isAdmin ? allCars : userOwnedCars, userOwnedCars, userCanHaveCar }, users: { allUsers } }
+  return { event, userId, isAdmin, jwt, isRegistered, existingRides, cars: { allCars: isAdmin ? allCars : userOwnedCars, userOwnedCars, userCanHaveCar }, users: { allUsers } }
 }
