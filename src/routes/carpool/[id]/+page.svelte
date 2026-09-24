@@ -65,6 +65,11 @@
   
   let existingRides = $derived(data?.existingRides?.map(ride => ride.id) || [])
 
+  /** @type {number | null} */
+  let existingDestinationRideId = $state(null);
+  /** @type {number | null} */
+  let existingReturnRideId = $state(null);
+
   let cars = $derived(data?.cars ?? { allCars: [], userOwnedCars: [], userCanHaveCar: false });
   let allUsers = $derived(data?.users?.allUsers ?? []);
   let jwt = $derived(data?.jwt ?? '');
@@ -204,11 +209,29 @@
 
   let isAdmin = $derived(data?.isAdmin);
   /** @type {number} */
-  let userId = 0;
+  let userId = $state(0);
 
   let confirmDelete = $state(false);
 
   onMount(() => {
+    for (let trip of trips) {
+      if (!trip.item) continue;
+      console.log(trip.collection + '   ' + trip.item.id + '   ' + trip.item.rides.map(r => `[${r.id ?? '.'}->${r.item?.id ?? '.'}]`))
+
+
+      //console.log(trip)
+      if (trip.collection === 'destination_trip') {
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides?.includes(ride.item?.id))
+        console.log('found destination ride', ride)
+        if (ride?.item !== undefined) destinationRideId = parseInt(ride.item.id);
+      } else if (trip.collection === 'return_trip') {
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides?.includes(ride.item?.id))
+        console.log('found return ride', ride)
+        if (ride?.item !== undefined) returnRideId = parseInt(ride.item.id);
+      }
+    }
+
+
     const user = sessionStorage.getItem('user');
 
 
@@ -244,11 +267,9 @@
             const rider = riders[k];
             if (parseInt(rider.item?.id || '-1') === userId) {
               if (trip.collection === 'destination_trip') {
-                destinationRideId = parseInt(ride.item.id);
-                previousDestinationRideId = parseInt(ride.item.id);
+                previousDestinationRideId = destinationRideId = existingDestinationRideId = parseInt(ride.item.id);
               } else if (trip.collection === 'return_trip') {
-                returnRideId = parseInt(ride.item.id);
-                previousReturnRideId = parseInt(ride.item.id);
+                previousReturnRideId = returnRideId = existingReturnRideId = parseInt(ride.item.id);
               }
             }
           }
@@ -345,7 +366,7 @@
                 {/if}
 
                 {#each trips.filter(trip => trip.collection === 'destination_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} />
+                  <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingDestinationRideId} />
                 {/each}
               </div>
               <div class="trip-box">
@@ -362,7 +383,7 @@
                 {/if}
 
                 {#each trips.filter(trip => trip.collection === 'return_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} />
+                  <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingReturnRideId} />
                 {/each}
               </div>
             </div>
