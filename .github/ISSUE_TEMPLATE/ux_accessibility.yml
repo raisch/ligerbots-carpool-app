@@ -1,0 +1,131 @@
+name: UX or accessibility issue
+description: Report a usability, accessibility, responsive-design, or interaction problem
+title: "[UX/A11y]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for experiences that are difficult to understand, navigate, read, operate, or access.
+
+        Do not include passwords, authentication tokens, student/family contact information, addresses, or other sensitive personal data. Redact personal information from screenshots and recordings.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find a duplicate or closely related report.
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Issue category
+      options:
+        - Accessibility
+        - Navigation or information architecture
+        - Forms or data entry
+        - Mobile or responsive layout
+        - Visual clarity or readability
+        - Interaction or feedback
+        - Content or terminology
+        - Other usability issue
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Affected page or flow
+      description: Identify the route, screen, component, or workflow.
+      placeholder: e.g. /login, carpool signup flow, navigation menu
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Describe the experience problem
+      description: Explain what is difficult, inaccessible, confusing, or inefficient.
+      placeholder: Describe what happens and where the difficulty occurs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps or scenario
+      description: Provide a short scenario or exact steps that demonstrate the issue.
+      placeholder: |
+        1. Go to ...
+        2. ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected experience
+      description: Describe how the interaction should work or what would make it accessible and understandable.
+      placeholder: Describe the desired user experience.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-users
+    attributes:
+      label: Who is affected?
+      options:
+        - Students
+        - Parents or guardians
+        - Coaches or administrators
+        - Drivers
+        - Riders
+        - Developers or maintainers
+        - Multiple groups
+        - Unknown
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser-device
+    attributes:
+      label: Browser, device, or viewport
+      description: Optional. Include this when the issue depends on browser, device, screen size, or input method.
+      placeholder: e.g. Safari on iPhone, Chrome at 200% zoom, keyboard-only
+
+  - type: input
+    id: assistive-tech
+    attributes:
+      label: Assistive technology
+      description: Optional. If relevant, list the assistive technology and version used.
+      placeholder: e.g. VoiceOver on macOS, NVDA with Firefox
+
+  - type: input
+    id: standard
+    attributes:
+      label: Accessibility guideline or success criterion
+      description: Optional. Include a WCAG criterion or other standard if you know it.
+      placeholder: e.g. WCAG 2.2 - 2.1.1 Keyboard
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: What observable outcome would resolve the issue?
+      placeholder: |
+        - [ ] A user can ...
+        - [ ] The control has ...
+        - [ ] The flow remains usable at ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots, recordings, or additional context
+      description: Add visual evidence, related issues, or notes if useful. Redact personal information first.

@@ -1,0 +1,111 @@
+name: Feature request
+description: Suggest an improvement or new capability for the LigerBots carpool app
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to the LigerBots carpool app.
+
+        Please focus on the problem to solve and the desired outcome. A proposed implementation is welcome, but it is not required.
+
+        Do not include passwords, authentication tokens, student/family contact information, addresses, or other sensitive personal data.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      description: Please confirm these items before filing the request.
+      options:
+        - label: I searched existing issues and did not find a duplicate or closely related request.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What problem would this feature solve, or what opportunity would it create?
+      placeholder: Describe the current limitation, pain point, or unmet need.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What should users be able to accomplish if this request is implemented?
+      placeholder: Describe the user-visible result or capability.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: users
+    attributes:
+      label: Who would benefit?
+      description: Select the primary group that would benefit from this change.
+      options:
+        - Students
+        - Parents or guardians
+        - Coaches or administrators
+        - Drivers
+        - Riders
+        - Developers or maintainers
+        - Multiple groups
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Example use case
+      description: Give a concrete example of when and how someone would use this feature.
+      placeholder: |
+        Example:
+        A parent needs to ...
+        They would ...
+        This would allow them to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Optional. If you have an idea for how this could work, describe it here without assuming a specific implementation is required.
+      placeholder: Describe a possible workflow, UI, API, or behavior.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: What do users do today instead? Are there other approaches worth considering?
+      placeholder: Describe current workarounds or alternative solutions.
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: What observable conditions would indicate that this feature solves the stated problem?
+      placeholder: |
+        - [ ] A user can ...
+        - [ ] The app shows ...
+        - [ ] Existing behavior continues to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints or considerations
+      description: Note any relevant privacy, accessibility, security, compatibility, operational, or policy considerations.
+      placeholder: Add any constraints or important edge cases.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add mockups, screenshots, related issue numbers, links, or other context that may help evaluate the request.
+      placeholder: Drag and drop images here or add related references.

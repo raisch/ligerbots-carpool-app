@@ -4,7 +4,28 @@ This is the repo for the new Ligerbots carpool app, a work in progress.
 
 Contact Coach Rob on slack if you're interested in helping.
 
-## Directory Structure
+## Change Request Workflow
+
+All changes to the repo **MUST** be made to a new branch. If you push to `main`, *you will be locked in a little room with only a little bread and water for hours and hours while the rest of us go out for pizza and a movie*.
+
+1. create a new branch with a descriptive name of the change - i.e. `fix-bug-in-user-handling [github issue #]` or `add-route-handling-for-the-magic-route-handling-route`
+2. make your changes **IN YOUR BRANCH ONLY!**
+3. commit and push your branch back to the repo.
+4. go to github and create a pull request for your branch
+
+Coach Rob will then review your changes and merge your pull request.
+
+If Coach Rob hasn't done this in a reasonable time, *text him* on his cell (as listed on the Ligerbots website or in Slack) to remind him.
+
+## Bug Tracking
+
+We use github issues to track bugs. 
+
+Make sure your bug report has a useful name, like `user-login-fails` rather than `user bug`, and uses the appropriate label or labels.
+
+All bug reports **MUST** contain the exact steps needed to reproduce the bug.
+
+## REPO Directory Structure
 - /bin - useful scripts (probably out-of-date)
 - /src - site components (svelte)
   - lib

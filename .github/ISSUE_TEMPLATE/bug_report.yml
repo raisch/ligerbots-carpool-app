@@ -1,0 +1,129 @@
+name: Bug report
+description: Report a reproducible problem with the LigerBots carpool app
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the LigerBots carpool app.
+
+        Please provide enough detail for someone else to reproduce the problem. Do not include passwords, authentication tokens, student/family contact information, addresses, or other sensitive personal data.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      description: Please confirm these items before filing the report.
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I can provide the exact steps needed to reproduce this bug.
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug description
+      description: Briefly describe what went wrong and where in the app it happened.
+      placeholder: A clear, concise description of the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact sequence of actions that causes the problem.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Enter ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected result.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+      placeholder: Describe the actual result, including any visible error message.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproducibility
+    attributes:
+      label: How often does this happen?
+      options:
+        - Every time
+        - Often
+        - Sometimes
+        - Once
+        - Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did you encounter the problem?
+      options:
+        - Deployed app
+        - Local development
+        - Automated test / CI
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version, branch, or commit
+      description: If known, provide the deployed version, branch name, or commit SHA.
+      placeholder: e.g. main @ abc1234, feature/my-branch, or unknown
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: Include this for browser-based issues.
+      placeholder: e.g. Chrome 128, Safari 18, Firefox 130
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system and device
+      placeholder: e.g. macOS 15 on MacBook, iOS 18 on iPhone, Windows 11
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: Paste only the relevant portion. Remove tokens, credentials, personal data, and other secrets first.
+      placeholder: Paste sanitized logs or stack traces here.
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or screen recordings
+      description: Add visual evidence if it helps explain the problem. Redact any personal or sensitive information first.
+      placeholder: Drag and drop images or recordings here.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add anything else that may help diagnose the issue, such as recent changes, workarounds, or related issue numbers.
