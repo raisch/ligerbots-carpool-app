@@ -161,6 +161,11 @@
         destination_trip: destinationRideId?.toString() ?? null,
         return_trip: returnRideId?.toString() ?? null
       }, jwt})
+
+      previousDestinationRideId = existingDestinationRideId = destinationRideId;
+      previousReturnRideId = existingReturnRideId = returnRideId;
+
+
       goto('#success-add', {invalidateAll: true})
     } catch (e) {
       goto('#error-add', {invalidateAll: true})
@@ -171,6 +176,10 @@
     console.log('removing selections', {destinationRideId, returnRideId, event})
     try {
       await removeFromRide({user: data?.userId ?? '-1', event: event?.id ?? '-1', jwt})
+
+      previousDestinationRideId = existingDestinationRideId = destinationRideId = null;
+      previousReturnRideId = existingReturnRideId = returnRideId = null;
+
       goto('#success-remove', {invalidateAll: true})
     } catch (e) {
       goto('#error-remove', {invalidateAll: true})
