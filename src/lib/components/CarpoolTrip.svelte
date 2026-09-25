@@ -20,10 +20,11 @@
      *   SetMovingUser: (userId: string | null, currentRideId: string | null, currentTripType: 'destination_trip' | 'return_trip' | null) => void,
      *   cars: { allCars: import('$lib/server/event').RideRecord[], userOwnedCars: import('$lib/server/event').RideRecord[], userCanHaveCar: boolean },
      *   userId: number | null,
-     *   jwt: string
+     *   jwt: string,
+     *   existingRideId: number | null,
      * }} 
      */
-    let { trip, RideId, SetId, previousDestinationRideId, previousReturnRideId, isAdmin, modifying, activeCarEditor, SetModifying, SetActiveCarEditor, SetMovingUser, cars, userId, jwt } = $props();
+    let { trip, RideId, SetId, previousDestinationRideId, previousReturnRideId, isAdmin, modifying, activeCarEditor, SetModifying, SetActiveCarEditor, SetMovingUser, cars, userId, jwt, existingRideId } = $props();
 
     let filter = $state('');
 
@@ -149,6 +150,9 @@
 	        {@const remaining = seats - item?.riders_func.count - (RideId === id ? 1 : 0) + (previousDestinationRideId === id || previousReturnRideId === id ? 1 : 0)}
 	        {@const seatDisplay = remaining > 0 ? `${remaining}/${seats} Seats Remaining` : 'Full'}
             
+            {@const isSelected = RideId === id}
+            {@const wasOriginallySelected = existingRideId === id}
+
             <!-- {@const { driver: {} } = item?.ride ?? {}} -->
 
 	        <div 
@@ -157,7 +161,7 @@
                         if (remaining <= 0 || RideId === id) return; // User cannot select a full ride, user cannot re-select the same ride
                         SetId(id)
                 }}>
-		        <span style="flex: 1; text-align: left;">{vehicheName} – {#if RideId === id}*{/if}{remaining}/{seats}</span>
+		        <span style="flex: 1; text-align: left;">{vehicheName} – {#if isSelected !== wasOriginallySelected}*{/if}{remaining}/{seats}</span>
                 <div class="info-button" onclick={selectInfoBox(id)}>info</div>
 		        <span
                 style="flex: 0 0 1rem; text-align: right; background-color: {remaining > 0 || RideId === id ? '#3375a6' : '#808080'}; border-radius: 5px; padding: 3px 5px; color: white;"
@@ -177,18 +181,27 @@
                             <li>Driver unknown or not on team</li>
                         {/if}
                     </ul>
-                    <b>Riders ({#if RideId === id}*{/if}{remaining}/{seats}):</b>
+                    <b>Riders ({#if isSelected !== wasOriginallySelected}*{/if}{remaining/* + (isSelected && !wasOriginallySelected ? 1 : !isSelected && wasOriginallySelected ? -1 : 0)*/}/{seats}):</b>
                         <ul>
                             {#each riders as rider}
-                                {@const { firstname, lastname, email_address, phone_number } = rider.item || {}}
-                                <li>{firstname} {lastname}{#if isAdmin}&nbsp;[<a onclick={() => SetMovingUser(rider.item?.id ?? null, ride.item.id, trip.collection)}>Move</a>]{/if}</li>
+                                {@const { firstname, lastname, email_address, phone_number, id: riderId } = rider.item || {}}
+                                {#if riderId === String(userId)}
+                                    {#if isSelected && wasOriginallySelected}
+                                        <li><u>{firstname} {lastname}</u>{#if isAdmin}&nbsp;[<a onclick={() => SetMovingUser(rider.item?.id ?? null, ride.item.id, trip.collection)}>Move</a>]{/if}</li>
+                                    {:else if wasOriginallySelected && !isSelected}
+                                        <li><i><s>{firstname} {lastname}</s></i>{#if isAdmin}&nbsp;[<a onclick={() => SetMovingUser(rider.item?.id ?? null, ride.item.id, trip.collection)}>Move</a>]{/if}</li>
+                                    {/if}
+                                {:else}
+                                    <li>{firstname} {lastname}{#if isAdmin}&nbsp;[<a onclick={() => SetMovingUser(rider.item?.id ?? null, ride.item.id, trip.collection)}>Move</a>]{/if}</li>
+                                {/if}
                             {/each}
                             {#if riders.length === 0}
                                 <li><i>No riders yet</i></li>
                             {/if}
-                            {#if RideId === id}
+                            {#if isSelected && !wasOriginallySelected}
                                 <li><i>+ (You)</i></li>
                             {/if}
+                            
                             {#if isAdmin}
                                 <li>[<a onclick={() => SetMovingUser(null, ride.item.id, trip.collection)}>Add</a>]</li>
                             {/if}

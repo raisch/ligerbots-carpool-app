@@ -67,6 +67,11 @@
   let isRegistered = $derived(data?.isRegistered);
   let existingRides = $derived(data?.existingRides);
 
+  /** @type {number | null} */
+  let existingDestinationRideId = $state(null);
+  /** @type {number | null} */
+  let existingReturnRideId = $state(null);
+
   let cars = $derived(data?.cars ?? { allCars: [], userOwnedCars: [], userCanHaveCar: false });
   let allUsers = $derived(data?.users?.allUsers ?? []);
   let jwt = $derived(data?.jwt ?? '');
@@ -141,6 +146,11 @@
         destination_trip: destinationRideId?.toString() ?? null,
         return_trip: returnRideId?.toString() ?? null
       }, jwt})
+
+      previousDestinationRideId = existingDestinationRideId = destinationRideId;
+      previousReturnRideId = existingReturnRideId = returnRideId;
+
+
       goto('#success-add', {invalidateAll: true})
     } catch (e) {
       goto('#error-add', {invalidateAll: true})
@@ -151,6 +161,10 @@
     console.log('removing selections', {destinationRideId, returnRideId, event})
     try {
       await removeFromRide({user: data?.userId ?? '-1', event: event?.id ?? '-1', jwt})
+
+      previousDestinationRideId = existingDestinationRideId = destinationRideId = null;
+      previousReturnRideId = existingReturnRideId = returnRideId = null;
+
       goto('#success-remove', {invalidateAll: true})
       destinationRideId = returnRideId = null;
     } catch (e) {
@@ -202,11 +216,11 @@
 
       //console.log(trip)
       if (trip.collection === 'destination_trip') {
-        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides?.includes(ride.item?.id))
         console.log('found destination ride', ride)
         if (ride?.item !== undefined) destinationRideId = parseInt(ride.item.id);
       } else if (trip.collection === 'return_trip') {
-        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides.includes(ride.item?.id))
+        let ride = trip.item.rides.find((/** @type {{ item: {id: string} }} */ ride) => existingRides?.includes(ride.item?.id))
         console.log('found return ride', ride)
         if (ride?.item !== undefined) returnRideId = parseInt(ride.item.id);
       }
@@ -247,9 +261,9 @@
             const rider = riders[k];
             if (parseInt(rider.item?.id || '-1') === userId) {
               if (trip.collection === 'destination_trip') {
-                previousDestinationRideId = destinationRideId = parseInt(ride.item.id);
+                previousDestinationRideId = destinationRideId = existingDestinationRideId = parseInt(ride.item.id);
               } else if (trip.collection === 'return_trip') {
-                previousReturnRideId = returnRideId = parseInt(ride.item.id);
+                previousReturnRideId = returnRideId = existingReturnRideId = parseInt(ride.item.id);
               }
             }
           }
@@ -344,7 +358,7 @@
                 {/if}
 
                 {#each trips.filter(trip => trip.collection === 'destination_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} />
+                  <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingDestinationRideId} />
                 {/each}
               </div>
               <div class="trip-box">
@@ -361,7 +375,7 @@
                 {/if}
 
                 {#each trips.filter(trip => trip.collection === 'return_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} />
+                  <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingReturnRideId} />
                 {/each}
               </div>
             </div>
