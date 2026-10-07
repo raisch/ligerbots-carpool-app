@@ -1,0 +1,3 @@
+creds.txt
+keys/*
+!keys/.gitkeep

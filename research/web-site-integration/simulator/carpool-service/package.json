@@ -1,0 +1,8 @@
+{
+  "name": "ligerbots-carpool-auth-simulator",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

@@ -1,0 +1,51 @@
+name: ligerbots-web-site-integration
+
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+      - ../plugins/ligerbots-carpool-integration/:/var/www/html/wp-content/plugins/ligerbots-carpool-integration
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+      - ./keys:/run/keys:ro
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+  carpool:
+    build:
+      context: ./carpool-service
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      WORDPRESS_ISSUER: https://www.ligerbots.org
+      WORDPRESS_AUDIENCE: carpool-provisioning
+      WORDPRESS_KEY_ID: wordpress-development
+      WORDPRESS_PUBLIC_KEY_PATH: /run/keys/wordpress-public.pem
+      SESSION_COOKIE_SECURE: "false"
+      LOG_PROFILE_DATA: "true"
+    volumes:
+      - ./keys:/run/keys:ro
+
+volumes:
+  wordpress_data:
+    name: ligerbots-web-site-integration-wordpress
+  db_data:
+    name: ligerbots-web-site-integration-db

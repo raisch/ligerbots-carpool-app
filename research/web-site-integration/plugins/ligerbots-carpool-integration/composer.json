@@ -1,0 +1,12 @@
+{
+  "name": "ligerbots/carpool-wordpress-integration",
+  "description": "WordPress integration plugin for the LigerBots Carpool application",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "firebase/php-jwt": "^7.0"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
