@@ -47,7 +47,7 @@ function sendJson(response, status, body) {
 
 function guidance(response) {
   response.writeHead(400, { 'content-type': 'text/html; charset=utf-8' })
-  response.end('<p>Please log into the Ligerbots web site first and click Resources/Carpools on the menu.</p>')
+  response.end('<p>Please log into the Ligerbots web site https://www.ligerbots.org first and click Resources/Carpools on the menu.</p>')
 }
 
 function readJson(request) {

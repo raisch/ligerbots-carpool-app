@@ -3,6 +3,7 @@ name: ligerbots-web-site-integration
 services:
   wordpress:
     image: wordpress:latest
+    container_name: wordpress
     ports:
       - "8080:80"
     environment:
@@ -20,6 +21,7 @@ services:
 
   db:
     image: mysql:8.0
+    container_name: db
     environment:
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
@@ -29,6 +31,7 @@ services:
       - db_data:/var/lib/mysql
 
   carpool:
+    container_name: carpool
     build:
       context: ./carpool-service
     ports:
