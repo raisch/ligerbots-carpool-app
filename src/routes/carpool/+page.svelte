@@ -217,7 +217,7 @@
     border-color: #0062cc;
   }
 
-  :not([data-status="published"])::after {
+  :is([data-status="draft"], [data-status="archived"])::after {
     display: inline-block;
     font-size: 0.5em;
     padding: 5px;
