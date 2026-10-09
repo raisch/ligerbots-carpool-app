@@ -357,6 +357,25 @@ export default class Event {
   }
 
   /**
+   * Change the status of an event.
+   *
+   * @param {string} id - The ID of the event to archive.
+   * @param {string} status The status to assign to the event
+   * @param {string} [mutation=UPDATE_EVENT_MUTATION] - The GraphQL mutation to use.
+   *
+   * @returns {Promise<EventRecord>} - The archived event record.
+   *
+   * @throws {Error} if failed to archive the event.
+   */
+  static async setEventStatus(id, status, mutation = Queries.UPDATE_EVENT_MUTATION) {
+    if (!id) {
+      throw new Error('Event ID is required')
+    }
+
+    return this.updateEvent(id, { status }, mutation)
+  }
+
+  /**
    * Delete an event from Directus.
    *
    * @param {string} id - The ID of the event to delete.

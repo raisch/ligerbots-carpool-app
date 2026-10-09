@@ -5,7 +5,7 @@
   import { page } from '$app/state';
   import CarpoolTrip from '$lib/components/CarpoolTrip.svelte';
   import { refresh } from '@directus/sdk';
-  import { removeFromRide, updateRideSelections } from '../ride.remote';
+  import { removeFromRide, updateRideSelections, setEventStatus } from '../ride.remote';
   import { onMount } from 'svelte';
   import CreateOrModifySignup from '$lib/components/CreateOrModifySignup.svelte';
   import CreateOrModifyEventSignup from '$lib/components/CreateOrModifyEventSignup.svelte';
@@ -191,6 +191,13 @@
     }).catch(console.error);
   }
 
+  /** @param {"draft"|"published"|"archived"} status */
+  async function setStatus(status) {
+    await setEventStatus({ event: event?.id ?? '-1', status, jwt: data?.jwt ?? '' });
+    invalidateAll();
+    goto('#');
+  }
+
   /** @type {number | null} */
   let previousDestinationRideId = $state(null);
   /** @type {number | null} */
@@ -330,6 +337,15 @@
                   <span class="editButton" onclick={() => setModifying({ item: event }, "editEvent")}>Edit</span>
                 </div>
               {/if}
+              
+              {#if isAdmin}
+                <div id="set-event-status-buttons">
+                  <button class="riderlistButton btn-success" hidden={event?.status === "published"} onclick={() => setStatus("published")}>{event?.status === "archived" ? "Unarchive" : "Publish"}</button>
+                  <button class="riderlistButton btn-primary" hidden={event?.status !== "published"} onclick={() => setStatus("draft")}>Unpublish</button>
+                  <button class="riderlistButton btn-danger" hidden={event?.status !== "published"} onclick={() => setStatus("archived")}>Archive</button>
+                </div>
+              {/if}
+
               <a class="riderlistButton btn-primary" href="/carpool/{event?.id}/attendees" target="_blank">View Attendees</a>
               <a class="riderlistButton btn-primary" href="/carpool/{event?.id}/riderlist" target="_blank">View Riders</a>
               <a class="riderlistButton btn-success" href="/carpool/{event?.id}/export" target="_blank">Export Spreadsheet</a>
@@ -509,12 +525,13 @@
     gap: 10px;
   }
 
-  .riderlistButton {
+  .riderlistButton:not([hidden]) {
     display: inline-block;
     padding: 5px 10px;
     border-radius: 5px;
     text-decoration: none;
     text-align: center;
+    border: none;
     /* background: #3375a6; */
   }
   
@@ -602,7 +619,15 @@
     color: #ff8f30;
     content: "Archived";
   }
-
+  #set-event-status-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  #set-event-status-buttons * {
+    flex: 1;
+    padding-left: 0;
+    padding-right: 0;
+  }
 
   @media (max-width: 768px) {
     .trip-box-container {
