@@ -54,8 +54,15 @@ const RideRemoveFormSchema = Joi.object({
  * @prop {string} jwt
  */
 
+/**
+ * @typedef SetEventStatusSchema
+ * @prop {string} event
+ * @prop {string} status
+ * 
+ * @prop {string} jwt
+ */
 
-export const setRideSelection = command('unchecked', async (/** @type {RideRegistrationFormSchema} */ {event, user, rides, jwt}) => {
+export const setRideSelection = command('unchecked', async (/** @type {RideRegistrationFormSchema} */ { event, user, rides, jwt }) => {
   const validatedUser = User.validate(jwt);
   if (!validatedUser) throw new Error('Unauthorized');
   if (validatedUser.id !== user && !validatedUser.is_admin) throw new Error('Cannot modify another user\'s ride selections');
@@ -78,13 +85,13 @@ export const setRideSelection = command('unchecked', async (/** @type {RideRegis
     }
   })
   return r
-})  
+})
 
-export const updateRideSelections = command('unchecked', async (/** @type {RideRegistrationFormSchema} */ {event, user, rides, jwt}) => {
+export const updateRideSelections = command('unchecked', async (/** @type {RideRegistrationFormSchema} */ { event, user, rides, jwt }) => {
   const validatedUser = User.validate(jwt);
   if (!validatedUser) throw new Error('Unauthorized');
   if (validatedUser.id !== user && !validatedUser.is_admin) throw new Error('Cannot modify another user\'s ride selections');
-  
+
   debug(`updateRideSelections(event=${event}, user=${user}, rides=${JSON.stringify(rides)})`)
   /**
    * @type {any[]}
@@ -104,11 +111,11 @@ export const updateRideSelections = command('unchecked', async (/** @type {RideR
   return r
 })
 
-export const removeFromRide = command('unchecked', async (/** @type {RideRemoveFormSchema} */ {event, user, jwt}) => {
+export const removeFromRide = command('unchecked', async (/** @type {RideRemoveFormSchema} */ { event, user, jwt }) => {
   const validatedUser = User.validate(jwt);
   if (!validatedUser) throw new Error('Unauthorized');
   if (validatedUser.id !== user && !validatedUser.is_admin) throw new Error('Cannot modify another user\'s ride selections');
-  
+
   debug(`removeFromRide(event=${event}, user=${user})`)
   console.log(`removeFromRide(event=${event}, user=${user})`)
   /**
@@ -130,7 +137,7 @@ export const addCarToTrip = command('unchecked', async (/** @type {AddCarToTripS
   if (!validatedUser) throw new Error('Unauthorized');
   if (!validatedUser.carpool_driver_eligible && !validatedUser.is_admin) throw new Error('User is not eligible to be a carpool driver');
   if ((await Ride.getRideById(rideId)).driver.some(driver => driver.item?.id === validatedUser.id) && !validatedUser.is_admin) throw new Error('Cannot add or remove cars for another user');
-  
+
   try {
     debug(`addCarToTrip(tripId=${tripId}, collection=${collection}, rideId=${rideId})`)
     console.log(`addCarToTrip(tripId=${tripId}, collection=${collection}, rideId=${rideId})`)
@@ -162,7 +169,7 @@ export const removeCarFromTrip = command('unchecked', async (/** @type {RemoveCa
   if (!validatedUser) throw new Error('Unauthorized');
   if (!validatedUser.carpool_driver_eligible && !validatedUser.is_admin) throw new Error('User is not eligible to be a carpool driver');
   if ((await Event.getTripRideById(tripRideId)).ride.driver.some(driver => driver.item?.id === validatedUser.id) && !validatedUser.is_admin) throw new Error('Cannot add or remove cars for another user');
-  
+
   try {
     console.log(`removeCarFromTrip(tripRideId=${tripRideId}, collection=${collection}, relationshipId=${relationshipId})`)
     debug(`removeCarFromTrip(tripRideId=${tripRideId}, collection=${collection}, relationshipId=${relationshipId})`)
@@ -174,5 +181,17 @@ export const removeCarFromTrip = command('unchecked', async (/** @type {RemoveCa
   } catch (error) {
     debug(`removeCarFromTrip(tripRideId=${tripRideId}, collection=${collection}, relationshipId=${relationshipId}) error: ${error}`)
     console.error(error)
+  }
+})
+
+export const setEventStatus = command('unchecked', async (/** @type {SetEventStatusSchema} */ { event, status, jwt }) => {
+  const validatedUser = User.validate(jwt);
+  if (!validatedUser) throw new Error('Unauthorized');
+  if (!validatedUser.is_admin) throw new Error('Cannot change event status');
+
+  try {
+    Event.setEventStatus(event, status);
+  } catch (error) {
+    console.error(error);
   }
 })

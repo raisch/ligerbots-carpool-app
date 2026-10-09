@@ -5,7 +5,7 @@
   import { page } from '$app/state';
   import CarpoolTrip from '$lib/components/CarpoolTrip.svelte';
   import { refresh } from '@directus/sdk';
-  import { removeFromRide, updateRideSelections } from '../ride.remote';
+  import { removeFromRide, updateRideSelections, setEventStatus } from '../ride.remote';
   import { onMount } from 'svelte';
   import CreateOrModifySignup from '$lib/components/CreateOrModifySignup.svelte';
   import CreateOrModifyEventSignup from '$lib/components/CreateOrModifyEventSignup.svelte';
@@ -25,14 +25,6 @@
    * @property {string} end_date - The end date of the event
    * @property {string} location - The location of the event
    * @property {Array<Trip>=} trips - An array of trips associated with the event
-   */
-
-  /**
-   * @typedef {import('$lib/server/trip').TripType} Trip
-   */
-
-  /**
-   * @typedef {Array<Trip>} Trips
    */
 
   /** @type {{
@@ -58,8 +50,10 @@
   let event = $derived(data?.event);
   // $inspect(page.url.hash, event);
 
-  /** @type {Trips} */
   let trips = $derived(event?.trips || []);
+  let destinationTrips = $derived(trips.filter(trip => trip.collection === 'destination_trip'));
+  let returnTrips = $derived(trips.filter(trip => trip.collection === 'return_trip'));
+  
 
   let destinationRideId = $state(/** @type {number | null} */ (null));
   let returnRideId = $state(/** @type {number | null} */ (null));
@@ -77,7 +71,7 @@
   let jwt = $derived(data?.jwt ?? '');
 
   /** @type {Record<string, any> | null} */
-  let modifying = $state(null)
+  let modifying = $state(null);
 
   /**
      * Set the current modifying subject if none is set.
@@ -197,6 +191,13 @@
     }).catch(console.error);
   }
 
+  /** @param {"draft"|"published"|"archived"} status */
+  async function setStatus(status) {
+    await setEventStatus({ event: event?.id ?? '-1', status, jwt: data?.jwt ?? '' });
+    invalidateAll();
+    goto('#');
+  }
+
   /** @type {number | null} */
   let previousDestinationRideId = $state(null);
   /** @type {number | null} */
@@ -271,10 +272,10 @@
       }
     }
 
-    if (isRegistered && returnRideId === null) {
+    if (isRegistered && returnRideId === null || returnTrips.length === 0) {
       previousReturnRideId = returnRideId = -1;
     }
-    if (isRegistered && destinationRideId === null) {
+    if (isRegistered && destinationRideId === null || destinationTrips.length === 0) {
       previousDestinationRideId = destinationRideId = -1;
     }
 
@@ -309,7 +310,7 @@
         <div class="card-body">
           <div class="event-header">
             <div>
-              <h2 class="card-title">{event?.name}</h2>
+              <h2 class="card-title" data-status={event?.status}>{event?.name}</h2>
               <p class="card-text event-description">{event?.description}</p>
               <p class="card-text"><strong>Start Date:</strong> {event?.start_date}</p>
               <p class="card-text"><strong>End Date:</strong> {event?.end_date}</p>
@@ -336,6 +337,15 @@
                   <span class="editButton" onclick={() => setModifying({ item: event }, "editEvent")}>Edit</span>
                 </div>
               {/if}
+              
+              {#if isAdmin}
+                <div id="set-event-status-buttons">
+                  <button class="riderlistButton btn-success" hidden={event?.status === "published"} onclick={() => setStatus("published")}>{event?.status === "archived" ? "Unarchive" : "Publish"}</button>
+                  <button class="riderlistButton btn-primary" hidden={event?.status !== "published"} onclick={() => setStatus("draft")}>Unpublish</button>
+                  <button class="riderlistButton btn-danger" hidden={event?.status !== "published"} onclick={() => setStatus("archived")}>Archive</button>
+                </div>
+              {/if}
+
               <a class="riderlistButton btn-primary" href="/carpool/{event?.id}/attendees" target="_blank">View Attendees</a>
               <a class="riderlistButton btn-primary" href="/carpool/{event?.id}/riderlist" target="_blank">View Riders</a>
               <a class="riderlistButton btn-success" href="/carpool/{event?.id}/export" target="_blank">Export Spreadsheet</a>
@@ -343,59 +353,71 @@
           </div>
 
           <div style="display: flex; flex-wrap: wrap; flex-direction: column;">
-            <div class="trip-box-container" style="display: flex; justify-content: space-between;">
-              <div class="trip-box">
-                <div style="font-size: 25px; padding-bottom: 5px;">Destination Trips</div>
-                <div style="display: flex; gap: 5px; padding-bottom: 5px; align-items: center;">
-                  <div 
-                    class="optout{destinationRideId === -1 ? ' optout-selected' : ''}"
-                    onclick={() => setDestinationRideId(-1)}
-                  >Opt Out</div>
+            {#if event?.status === "published" || isAdmin}
+              <div class="trip-box-container">
+                <div class="trip-box">
+                  <div style="font-size: 25px; padding-bottom: 5px;">Destination Trips</div>
+                  <div style="display: flex; gap: 5px; padding-bottom: 5px; align-items: center;">
+                    <div 
+                      class="optout{destinationRideId === -1 ? ' optout-selected' : ''}"
+                      onclick={() => setDestinationRideId(-1)}
+                      data-optout-hidden={destinationTrips.length === 0}
+                    >Opt Out</div>
+                  </div>
+
+                  {#if isAdmin}
+                    <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'destination_trip', item: {} }, 'create')}>+</div>
+                  {/if}
+
+                  {#each destinationTrips as trip}
+                    <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingDestinationRideId} />
+                  {:else}
+                    <p>No destination trips available.</p>
+                  {/each}
                 </div>
+                <div class="trip-box">
+                  <div style="font-size: 25px; padding-bottom: 5px;">Return Trips</div>
+                  <div style="display: flex; gap: 5px; padding-bottom: 5px; align-items: center;">
+                    <div 
+                      class="optout{returnRideId === -1 ? ' optout-selected' : ''}"
+                      onclick={() => setReturnRideId(-1)}
+                      data-optout-hidden={returnTrips.length === 0}
+                    >Opt Out</div>
+                  </div>
 
-                {#if isAdmin}
-                  <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'destination_trip', item: {} }, 'create')}>+</div>
-                {/if}
+                  {#if isAdmin}
+                    <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'return_trip', item: {} }, 'create')}>+</div>
+                  {/if}
 
-                {#each trips.filter(trip => trip.collection === 'destination_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingDestinationRideId} />
-                {/each}
-              </div>
-              <div class="trip-box">
-                <div style="font-size: 25px; padding-bottom: 5px;">Return Trips</div>
-                <div style="display: flex; gap: 5px; padding-bottom: 5px; align-items: center;">
-                  <div 
-                    class="optout{returnRideId === -1 ? ' optout-selected' : ''}"
-                    onclick={() => setReturnRideId(-1)}
-                  >Opt Out</div>
+                  {#each returnTrips as trip}
+                    <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingReturnRideId} />
+                  {:else}
+                    <p>No return trips available.</p>
+                  {/each}
                 </div>
-
-                {#if isAdmin}
-                  <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'return_trip', item: {} }, 'create')}>+</div>
-                {/if}
-
-                {#each trips.filter(trip => trip.collection === 'return_trip') as trip}
-                  <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingReturnRideId} />
-                {/each}
               </div>
-            </div>
-            {#if trips.length > 0}
-              <div style="justify-content: center; display: flex; gap: 10px; margin: 10px 0;">
-                <button class="undoChanges" disabled={previousDestinationRideId === null || previousReturnRideId === null || (destinationRideId === previousDestinationRideId && returnRideId === previousReturnRideId)} onclick={undoChanges}>Undo Changes</button>
-                <button class="confirm btn-primary" disabled={destinationRideId === null || returnRideId === null} onclick={updateSelections}>Confirm</button>
-                <button class="remove btn-danger" onclick={removeSelections} hidden={previousDestinationRideId === null && previousReturnRideId === null && !isRegistered}>Cancel event registration</button>
+              {#if trips.length > 0}
+                <div style="justify-content: center; display: flex; gap: 10px; margin: 10px 0;">
+                  <button class="undoChanges" disabled={previousDestinationRideId === null || previousReturnRideId === null || (destinationRideId === previousDestinationRideId && returnRideId === previousReturnRideId)} onclick={undoChanges}>Undo Changes</button>
+                  <button class="confirm btn-primary" disabled={destinationRideId === null || returnRideId === null} onclick={updateSelections}>Confirm</button>
+                  <button class="remove btn-danger" onclick={removeSelections} hidden={previousDestinationRideId === null && previousReturnRideId === null && !isRegistered}>Cancel event registration</button>
+                </div>
+              {:else}
+                <p>No trips selections available for this event.</p>
+              {/if}
+              <!-- <button class="remove" onclick={removeAllSelections}>Test: Leave all</button> -->
+
+              <div id="message">
+                <div hidden={page.url.hash !== "#success-add"} style="color: green;">Successfully updated ride selections!</div>
+                <div hidden={page.url.hash !== "#error-add"} style="color: red;">Error updating ride selections.</div>
+                <div hidden={page.url.hash !== "#success-remove"} style="color: green;">Successfully removed from rides!</div>
+                <div hidden={page.url.hash !== "#error-remove"} style="color: red;">Error removing from rides.</div>
               </div>
+            {:else if event?.status === "draft"}
+              <p>This event is not yet available for sign-ups.</p>
             {:else}
-              <p>No trips available for this event.</p>
+              <p>This event has already ended.</p>
             {/if}
-            <!-- <button class="remove" onclick={removeAllSelections}>Test: Leave all</button> -->
-
-            <div id="message">
-              <div hidden={page.url.hash !== "#success-add"} style="color: green;">Successfully updated ride selections!</div>
-              <div hidden={page.url.hash !== "#error-add"} style="color: red;">Error updating ride selections.</div>
-              <div hidden={page.url.hash !== "#success-remove"} style="color: green;">Successfully removed from rides!</div>
-              <div hidden={page.url.hash !== "#error-remove"} style="color: red;">Error removing from rides.</div>
-            </div>
           </div>
         </div>
       </div>
@@ -415,11 +437,21 @@
     z-index: 99999;
   } */
 
+
+
+  .trip-box-container {
+    display: flex;
+    justify-content: space-evenly;
+    
+    gap: max(2%, 20px);
+    
+  }
   .trip-box {
     list-style-type: none;
     padding: 0;
     float: left;
-    width: 49%;
+    min-width: 49%;
+    max-width: 75%;
   }
 
   .event-description {
@@ -493,12 +525,13 @@
     gap: 10px;
   }
 
-  .riderlistButton {
+  .riderlistButton:not([hidden]) {
     display: inline-block;
     padding: 5px 10px;
     border-radius: 5px;
     text-decoration: none;
     text-align: center;
+    border: none;
     /* background: #3375a6; */
   }
   
@@ -565,7 +598,36 @@
     border-color: #0062cc;
   }
 
-  
+  [data-optout-hidden=true] {
+    visibility: hidden;
+  }
+  :is([data-status="draft"], [data-status="archived"])::after {
+    display: inline-block;
+    font-size: 0.5em;
+    padding: 5px;
+    margin-left: 10px;
+    border-radius: 5px;
+    vertical-align: middle;
+  }
+  [data-status="draft"]::after {
+    background-color: #c0e0ff;
+    color: #4070ff;
+    content: "Draft";
+  }
+  [data-status="archived"]::after {
+    background-color: #ffefaf;
+    color: #ff8f30;
+    content: "Archived";
+  }
+  #set-event-status-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  #set-event-status-buttons * {
+    flex: 1;
+    padding-left: 0;
+    padding-right: 0;
+  }
 
   @media (max-width: 768px) {
     .trip-box-container {

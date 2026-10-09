@@ -91,7 +91,7 @@ export default class Event {
       throw new Error('Backend client is not available')
     }
 
-    query = query.replace('{{status}}', status)
+    query = status === "all" ? Queries.EVENT_ALL_QUERY : query.replace('{{status}}', status)
 
     debug(`getEvents(status=${status}) query: ${query}`)
 
@@ -354,6 +354,25 @@ export default class Event {
     }
 
     return this.updateEvent(id, { status: 'archived' }, mutation)
+  }
+
+  /**
+   * Change the status of an event.
+   *
+   * @param {string} id - The ID of the event to archive.
+   * @param {string} status The status to assign to the event
+   * @param {string} [mutation=UPDATE_EVENT_MUTATION] - The GraphQL mutation to use.
+   *
+   * @returns {Promise<EventRecord>} - The archived event record.
+   *
+   * @throws {Error} if failed to archive the event.
+   */
+  static async setEventStatus(id, status, mutation = Queries.UPDATE_EVENT_MUTATION) {
+    if (!id) {
+      throw new Error('Event ID is required')
+    }
+
+    return this.updateEvent(id, { status }, mutation)
   }
 
   /**
@@ -950,7 +969,7 @@ export default class Event {
       console.error('Failed to clear null trip rides:', err)
     }
   }
-  
+
 
   /**
    * Add a rider to a trip ride.
@@ -1132,7 +1151,7 @@ export default class Event {
     }
     let relationshipId = /** @type {EventRecord} */(eventData).attendees?.find(attendee => attendee.users_id.id === userId)?.id;
     console.log("Found relationship ID for attendee:", relationshipId);
-    
+
     if (!relationshipId) {
       return {}
     }
@@ -1150,7 +1169,7 @@ export default class Event {
    */
   static async removeAttendeeFromEventById(relationshipId, mutation = queries.REMOVE_ATTENDEE_MUTATION) {
     console.log("Removing attendee with relationship ID:", relationshipId);
-    
+
     if (!relationshipId) {
       throw new Error('Relationship ID is required')
     }
@@ -1245,11 +1264,11 @@ export default class Event {
       throw new Error('Event is required')
     }
 
-    let optoutTo = event.attendees?.filter(attendee => 
+    let optoutTo = event.attendees?.filter(attendee =>
       !event.trips?.filter((/** @type {import('$lib/server/trip.js').TripType} */ trip) => trip.collection === 'destination_trip')
         .some(trip => trip.item.rides.some(ride => ride.item.riders.some(rider => rider.item?.id === attendee.users_id.id)))
     ) ?? [];
-    let optoutFrom = event.attendees?.filter(attendee => 
+    let optoutFrom = event.attendees?.filter(attendee =>
       !event.trips?.filter((/** @type {import('$lib/server/trip.js').TripType} */ trip) => trip.collection === 'return_trip')
         .some(trip => trip.item.rides.some(ride => ride.item.riders.some(rider => rider.item?.id === attendee.users_id.id)))
     ) ?? [];

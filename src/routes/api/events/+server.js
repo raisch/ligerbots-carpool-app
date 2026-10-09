@@ -15,8 +15,8 @@ const errResp = (err, status = 500) =>
 export async function GET({ url, cookies }) {
   const jwt = cookies.get('jwt')
   if (!jwt || !User.validate(jwt)) return new Response('Unauthorized', { status: 401 })
-  
-  const status = url.searchParams.get('status') || 'published'
+
+  const status = url.searchParams.get('status') || 'draft'
   try {
     const events = await Event.getEvents(status)
     return json(events)

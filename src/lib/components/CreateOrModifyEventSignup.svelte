@@ -32,7 +32,7 @@
         const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
         const defaultStartDate = today;
         const defaultEndDate = today;
-        const defaultStatus = 'published';
+        const defaultStatus = 'draft';
 
         if (Subject.mode === 'createEvent') {
             fields.name = Subject?.item?.name || '';

@@ -146,7 +146,8 @@
         {#each rides as ride}
             {@const { item } = ride}
             {@const id = parseInt(item?.id)}
-            {@const { riders = [], ride: { seats, driver: drivers = [], name: vehicheName, vehicle_type } } = ride.item ?? { ride: {} }}
+            {@const { riders = [], ride: ride1 } = ride.item ?? {}}
+            {@const { seats = 0, driver: drivers = [], name: vehicheName, vehicle_type } = ride1 ?? {}}
 	        {@const remaining = seats - item?.riders_func.count - (RideId === id ? 1 : 0) + (previousDestinationRideId === id || previousReturnRideId === id ? 1 : 0)}
 	        {@const seatDisplay = remaining > 0 ? `${remaining}/${seats} Seats Remaining` : 'Full'}
             
@@ -161,7 +162,7 @@
                         if (remaining <= 0 || RideId === id) return; // User cannot select a full ride, user cannot re-select the same ride
                         SetId(id)
                 }}>
-		        <span style="flex: 1; text-align: left;">{vehicheName} – {#if isSelected !== wasOriginallySelected}*{/if}{remaining}/{seats}</span>
+		        <span style="flex: 1; text-align: left;">{vehicheName} – {#if isSelected !== wasOriginallySelected}*{/if}{remaining}/{seats} remaining</span>
                 <div class="info-button" onclick={selectInfoBox(id)}>info</div>
 		        <span
                 style="flex: 0 0 1rem; text-align: right; background-color: {remaining > 0 || RideId === id ? '#3375a6' : '#808080'}; border-radius: 5px; padding: 3px 5px; color: white;"
@@ -181,7 +182,7 @@
                             <li>Driver unknown or not on team</li>
                         {/if}
                     </ul>
-                    <b>Riders ({#if isSelected !== wasOriginallySelected}*{/if}{remaining/* + (isSelected && !wasOriginallySelected ? 1 : !isSelected && wasOriginallySelected ? -1 : 0)*/}/{seats}):</b>
+                    <b>Riders ({#if isSelected !== wasOriginallySelected}*{/if}{remaining/* + (isSelected && !wasOriginallySelected ? 1 : !isSelected && wasOriginallySelected ? -1 : 0)*/}/{seats} remaining):</b>
                         <ul>
                             {#each riders as rider}
                                 {@const { firstname, lastname, email_address, phone_number, id: riderId } = rider.item || {}}
@@ -241,7 +242,7 @@
                         <!-- {@const {id, item} = car} -->
                         {@const driver = car.driver?.flatMap(driver => driver.item ? [`${driver.item.firstname} ${driver.item.lastname}`, driver.item.email_address ?? null, driver.item.phone_number ?? null] : `unknown[id:${driver.id}]`)}
                         {@const driverName = car.driver?.map(driver => driver.item ? `${driver.item.firstname} ${driver.item.lastname}` : `unknown[id:${driver.id}]`)}
-                        <button hidden={!search(filter, car.name, car.vehicle_type, ...driver)} class="add-ride-option" onclick={() => addCarIfNotPresent(rides, car.id)} data-selected={rides?.some(ride => ride.item?.ride.id === car.id)}>
+                        <button hidden={!search(filter, car.name, car.vehicle_type, ...driver)} class="add-ride-option" onclick={() => addCarIfNotPresent(rides, car.id)} data-selected={rides?.some(ride => ride.item?.ride?.id === car.id)}>
                             <span>{car.name} ({car.vehicle_type} - {car.seats} seats)</span>
                             {#if driver}
                                 <span>Driven by {driverName.join(', ')}</span>

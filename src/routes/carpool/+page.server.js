@@ -20,7 +20,7 @@ export async function load({ cookies }) {
 
   let events
   try {
-    events = await Event.getEvents()
+    events = await Event.getEvents(isAdmin ? "all" : "published");
   } catch (error) {
     console.error(error)
   }

@@ -12,6 +12,17 @@ const queries = {
         location
     }
   }`,
+  EVENT_ALL_QUERY: `{
+    event {
+        id
+        name
+        status
+        description
+        start_date
+        end_date
+        location
+    }
+  }`,
   EVENT_BY_ID_QUERY: `{
     event_by_id(id: "{{id}}") {
           id
@@ -181,12 +192,12 @@ const queries = {
           }
       }
   }`,
-    /**
- * GraphQL query for fetching a single event by ID, including all of its trips, rides, and riders.
- *
- * Replace `{{id}}` with the Directus event ID.
- */
-    EVENT_COMPLETE_BY_ID_QUERY: `{
+  /**
+* GraphQL query for fetching a single event by ID, including all of its trips, rides, and riders.
+*
+* Replace `{{id}}` with the Directus event ID.
+*/
+  EVENT_COMPLETE_BY_ID_QUERY: `{
         event_complete_by_id: event_trips_by_id(id: "{{id}}") {
             id
             start_date
@@ -526,9 +537,9 @@ const queries = {
     delete_event_trips_item(id: $id) {
       id
     }
-  }`,  
+  }`,
 
-// GraphQL mutation for deleting a trip (works for both destination and return trips)
+  // GraphQL mutation for deleting a trip (works for both destination and return trips)
   DELETE_TRIP_MUTATION: `mutation ($collection: String!, $id: ID!) {
     delete_item(collection: $collection, id: $id) {
       id
