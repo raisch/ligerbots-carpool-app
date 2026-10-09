@@ -104,7 +104,7 @@
         <div class="col-md-6">
           <div class="card mb-6">
             <div class="card-body">
-              <h2 class="card-title"><a href="/carpool/{event.id}">{event.name}</a></h2>
+              <h2 class="card-title" data-status={event.status}><a href="/carpool/{event.id}">{event.name}</a></h2>
               <p class="card-text">{event.description}</p>
               <p class="card-text"><strong>Start Date:</strong> {event.start_date}</p>
               <p class="card-text"><strong>End Date:</strong> {event.end_date}</p>
@@ -215,5 +215,24 @@
   .btn-primary:hover {
     background-color: #0069d9;
     border-color: #0062cc;
+  }
+
+  :not([data-status="published"])::after {
+    display: inline-block;
+    font-size: 0.5em;
+    padding: 5px;
+    margin-left: 10px;
+    border-radius: 5px;
+    vertical-align: middle;
+  }
+  [data-status="draft"]::after {
+    background-color: #c0e0ff;
+    color: #4070ff;
+    content: "Draft";
+  }
+  [data-status="archived"]::after {
+    background-color: #ffefaf;
+    color: #ff8f30;
+    content: "Archived";
   }
 </style>

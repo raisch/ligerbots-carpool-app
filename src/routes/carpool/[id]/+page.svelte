@@ -27,14 +27,6 @@
    * @property {Array<Trip>=} trips - An array of trips associated with the event
    */
 
-  /**
-   * @typedef {import('$lib/server/trip').TripType} Trip
-   */
-
-  /**
-   * @typedef {Array<Trip>} Trips
-   */
-
   /** @type {{
       data?: {
         event: import('$lib/server/event').EventRecord,
@@ -58,8 +50,10 @@
   let event = $derived(data?.event);
   // $inspect(page.url.hash, event);
 
-  /** @type {Trips} */
   let trips = $derived(event?.trips || []);
+  let destinationTrips = $derived(trips.filter(trip => trip.collection === 'destination_trip'));
+  let returnTrips = $derived(trips.filter(trip => trip.collection === 'return_trip'));
+  
 
   let destinationRideId = $state(/** @type {number | null} */ (null));
   let returnRideId = $state(/** @type {number | null} */ (null));
@@ -77,7 +71,7 @@
   let jwt = $derived(data?.jwt ?? '');
 
   /** @type {Record<string, any> | null} */
-  let modifying = $state(null)
+  let modifying = $state(null);
 
   /**
      * Set the current modifying subject if none is set.
@@ -271,10 +265,10 @@
       }
     }
 
-    if (isRegistered && returnRideId === null) {
+    if (isRegistered && returnRideId === null || returnTrips.length === 0) {
       previousReturnRideId = returnRideId = -1;
     }
-    if (isRegistered && destinationRideId === null) {
+    if (isRegistered && destinationRideId === null || destinationTrips.length === 0) {
       previousDestinationRideId = destinationRideId = -1;
     }
 
@@ -343,13 +337,14 @@
           </div>
 
           <div style="display: flex; flex-wrap: wrap; flex-direction: column;">
-            <div class="trip-box-container" style="display: flex; justify-content: space-between;">
+            <div class="trip-box-container">
               <div class="trip-box">
                 <div style="font-size: 25px; padding-bottom: 5px;">Destination Trips</div>
                 <div style="display: flex; gap: 5px; padding-bottom: 5px; align-items: center;">
                   <div 
                     class="optout{destinationRideId === -1 ? ' optout-selected' : ''}"
                     onclick={() => setDestinationRideId(-1)}
+                    data-optout-hidden={destinationTrips.length === 0}
                   >Opt Out</div>
                 </div>
 
@@ -357,8 +352,10 @@
                   <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'destination_trip', item: {} }, 'create')}>+</div>
                 {/if}
 
-                {#each trips.filter(trip => trip.collection === 'destination_trip') as trip}
+                {#each destinationTrips as trip}
                   <CarpoolTrip {trip} {cars} {userId} RideId={destinationRideId} SetId={setDestinationRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingDestinationRideId} />
+                {:else}
+                  <p>No destination trips available.</p>
                 {/each}
               </div>
               <div class="trip-box">
@@ -367,6 +364,7 @@
                   <div 
                     class="optout{returnRideId === -1 ? ' optout-selected' : ''}"
                     onclick={() => setReturnRideId(-1)}
+                    data-optout-hidden={returnTrips.length === 0}
                   >Opt Out</div>
                 </div>
 
@@ -374,8 +372,10 @@
                   <div class="AddButton" onclick={() => setModifying({ mode: 'create', collection: 'return_trip', item: {} }, 'create')}>+</div>
                 {/if}
 
-                {#each trips.filter(trip => trip.collection === 'return_trip') as trip}
+                {#each returnTrips as trip}
                   <CarpoolTrip {trip} {cars} {userId} RideId={returnRideId} SetId={setReturnRideId} {previousDestinationRideId} {previousReturnRideId} {isAdmin} {modifying} {activeCarEditor} SetModifying={setModifying} SetActiveCarEditor={setActiveCarEditor} SetMovingUser={setMovingUser} {jwt} existingRideId={existingReturnRideId} />
+                {:else}
+                  <p>No return trips available.</p>
                 {/each}
               </div>
             </div>
@@ -386,7 +386,7 @@
                 <button class="remove btn-danger" onclick={removeSelections} hidden={previousDestinationRideId === null && previousReturnRideId === null && !isRegistered}>Cancel event registration</button>
               </div>
             {:else}
-              <p>No trips available for this event.</p>
+              <p>No trips selections available for this event.</p>
             {/if}
             <!-- <button class="remove" onclick={removeAllSelections}>Test: Leave all</button> -->
 
@@ -415,11 +415,21 @@
     z-index: 99999;
   } */
 
+
+
+  .trip-box-container {
+    display: flex;
+    justify-content: space-evenly;
+    
+    gap: max(2%, 20px);
+    
+  }
   .trip-box {
     list-style-type: none;
     padding: 0;
     float: left;
-    width: 49%;
+    min-width: 49%;
+    max-width: 75%;
   }
 
   .event-description {
@@ -565,7 +575,11 @@
     border-color: #0062cc;
   }
 
-  
+  [data-optout-hidden=true] {
+    visibility: hidden;
+  }
+
+
 
   @media (max-width: 768px) {
     .trip-box-container {

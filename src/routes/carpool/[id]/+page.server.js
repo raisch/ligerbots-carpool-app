@@ -30,7 +30,7 @@ export async function load({ params, cookies }) {
   const isRegistered = event?.attendees?.some(attendee => attendee.users_id.id === userId) ?? false;
 
   // List of rides that the user is already in
-  const existingRides = event?.trips?.map(trip => trip.item.rides.filter(ride => ride.item.riders.some(rider => rider.item?.id === userId)).map(ride => ride.item.id)).flat() ?? [];
+  const existingRides = event?.trips?.map(trip => trip.item.rides.filter(ride => ride.item?.riders.some(rider => rider.item?.id === userId)).map(ride => ride.item.id)).flat() ?? [];
 
   const allCars = await Ride.getAllRides()
   const userOwnedCars = allCars.filter(ride => ride.driver?.some(driver => driver.id === userId))
