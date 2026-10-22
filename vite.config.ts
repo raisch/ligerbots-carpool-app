@@ -1,4 +1,5 @@
 import dotenv from 'dotenv'
+import path from 'node:path'
 
 import { defineConfig } from 'vitest/config'
 
@@ -28,8 +29,15 @@ export default defineConfig({
       'Access-Control-Max-Age': '1728000'
     }
   },
-  plugins: [sveltekit()],
+  plugins: process.env.VITEST ? [] : [sveltekit()],
   resolve: {
+    alias: {
+      $lib: path.resolve('src/lib'),
+      $components: path.resolve('src/components'),
+      $helpers: path.resolve('src/helpers'),
+      $styles: path.resolve('src/styles'),
+      $types: path.resolve('src/types')
+    },
     conditions: process.env.VITEST ? ['browser'] : undefined
   },
   test: {

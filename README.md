@@ -25,6 +25,41 @@ Make sure your bug report has a useful name, like `user-login-fails` rather than
 
 All bug reports **MUST** contain the exact steps needed to reproduce the bug.
 
+## Local Docker environment
+
+The repository includes [docker-compose.yaml](docker-compose.yaml) for a local Directus and carpool
+environment. It starts PostgreSQL, Directus, and the carpool app in that order. The app connects to
+Directus through the internal `directus:8055` service name; it does not use a production backend.
+
+Create a local `.env` file that is not committed:
+
+```dotenv
+POSTGRES_PASSWORD=use-a-local-password
+DIRECTUS_SECRET=use-a-long-random-secret
+DIRECTUS_ADMIN_EMAIL=admin@example.test
+DIRECTUS_ADMIN_PASSWORD=use-a-local-admin-password
+JWT_SECRET=use-a-long-random-jwt-secret
+API_TOKEN=create-a-directus-static-token-after-first-start
+```
+
+Start the stack with:
+
+```sh
+docker compose up --build
+```
+
+On first startup, open <http://localhost:8055>, sign in with the configured Directus administrator,
+create a static token for the carpool app, add it to `.env` as `API_TOKEN`, and recreate the carpool
+service:
+
+```sh
+docker compose up --build carpool
+```
+
+The carpool app is then available at <http://localhost:4000>. Volumes persist database, upload, and
+Directus extension data. This stack is for local or isolated development only; do not use its
+credentials, synthetic data, or default ports as a production deployment configuration.
+
 ## REPO Directory Structure
 - /bin - useful scripts (probably out-of-date)
 - /src - site components (svelte)
@@ -111,4 +146,3 @@ browsers and violates the contract browsers have with page content.</div><br/>
 A far better way to accomplish the same functionality, and one that does not pose as much risk as SVGs, is to
 use individual `<img>` tags wrapped in `<a>` anchor tags which then rely on the standard page formatting
 tools to manage their position on the page.
-

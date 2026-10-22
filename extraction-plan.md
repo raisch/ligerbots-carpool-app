@@ -248,6 +248,7 @@ Use small, reviewable commits/PRs. Every task runs its smallest relevant tests a
 - Retained carpool server surface includes event, trip, ride, rider, vehicle, user, spreadsheet, Directus client, five carpool GraphQL modules, and the existing service test suites.
 - Website-only candidates and deployment/static surfaces remain listed in sections 4 and 5 for dependency review; no deletion has been performed.
 - The repository contains no tracked Playwright configuration, browser suite, CI workflow, constitution, or architecture artifact. Existing tests are Vitest service suites plus a live-backend event suite.
+- Isolated backend evidence: PostgreSQL 16 and Directus 11.13.4 were started from [docker-compose.yaml](docker-compose.yaml); PostgreSQL reached `healthy`, Directus reached `healthy`, `GET /server/health` returned `{"status":"ok"}`, and the configured isolated admin login returned HTTP 200. The initial Directus healthcheck used `localhost`, which resolved incorrectly inside the container; it was corrected to `127.0.0.1`.
 - Deployment inventory: the Dockerfile builds a Node 22 image and starts `node ./build/index.js` on port 4000; the Compose stack uses Directus/PostgreSQL and the same app port; the systemd templates run `/opt/ligerbots/frontend` behind nginx on `ligerbots.0mo.cc`, with `/assets` proxied to `admin.0mo.cc:8055`. The production systemd template currently uses `npm run preview` and `NODE_ENV=development`; this is recorded for later deployment alignment, not changed as part of M0.
 
 **Commands attempted and results:**
@@ -255,23 +256,27 @@ Use small, reviewable commits/PRs. Every task runs its smallest relevant tests a
 | Command | Result | Evidence / disposition |
 |---|---|---|
 | `pnpm install` | PASS | Frozen lockfile resolution succeeded with pnpm `12.5.1`; no manifest/lockfile changes. |
-| `pnpm exec vitest run src/lib/server/tests/event.test.js ...vehicle.test.js` | FAIL before tests | Svelte/Vite plugin startup throws `TypeError: Cannot convert undefined or null to object` in `vite-plugin-svelte` hot-update setup. No test counts are available. |
-| `pnpm test` equivalent startup path | FAIL before tests | Same Vitest/Vite startup blocker; deterministic suite is not currently runnable. |
+| `PUBLIC_SERVER_HOST=localhost ... pnpm exec vitest run [five service suites]` | FAIL with test results | The SvelteKit plugin startup blocker was removed for Vitest by using explicit server-test aliases. The five-suite run executed 58 tests: 57 passed, 1 failed, with one additional rider-suite collection failure because its mock omits `RIDER_USER_FIELDS`. The remaining event assertion expects an outdated `createTripRideMutation` call. |
+| `pnpm test` equivalent startup path | NOT rerun | The targeted deterministic command now starts; run the aggregate after the existing suite mock/assertion defects are dispositioned. |
 | `pnpm run check` | FAIL | The script now uses local `pnpm exec` tooling and the repository `jsconfig.json`; `svelte-check` reports 57 errors and 60 warnings across 32 files. Treat the complete output as the pre-extraction type-check baseline; do not claim a clean baseline. |
 | `pnpm run build` / direct `pnpm exec vite build` | FAIL | The build reaches 356 transformed modules but fails because the legacy signup API imports missing static `REGISTRATION_KEY`/`ID_HASH_PEPPER` values. The application JWT helper now reads its secret at runtime. Existing accessibility/state-reference warnings remain. |
-| `docker info` | UNAVAILABLE | Docker daemon was unavailable during M0; containerized Directus/database and browser infrastructure were not provisioned. |
+| `docker info` | PASS | Docker server `29.1.3` is available. |
+| `docker compose up -d database directus` | PASS | PostgreSQL 16 and Directus 11.13.4 started with isolated named volumes; both services reached healthy status after the healthcheck correction. |
+| `curl http://localhost:8055/server/health` | PASS | Directus returned `{"status":"ok"}`. |
+| Directus admin login against `http://localhost:8055/auth/login` | PASS | Isolated configured admin returned HTTP 200; no token was persisted in the repository or evidence. |
+| `docker compose build carpool` | FAIL at application build | Docker image build and dependency installation completed, then `pnpm run build` failed on the legacy signup API import of missing static `REGISTRATION_KEY`/`ID_HASH_PEPPER`. No image was produced. |
 | `node --version`, `pnpm --version` | PASS | Node `v26.9.0`, pnpm `12.5.1`; Dockerfile specifies Node 22 and compatibility remains to be reconciled. |
 
 **M0 blockers and owners to resolve:**
 
-1. **Tooling owner:** align Vite/Vitest/Svelte plugin versions or configuration so deterministic tests can start. The `pnpx`/`pnpm exec` script issue is resolved in [package.json](package.json).
+1. **Tooling owner:** align Vite/Vitest/Svelte plugin versions or configuration so deterministic tests can start. The `pnpx`/`pnpm exec` script issue is resolved in [package.json](package.json), and Vitest now bypasses the incompatible SvelteKit hot-update plugin with explicit aliases in [vite config](vite.config.ts).
 2. **Application/auth owner:** decide how legacy local-auth code is quarantined or removed while authentication is deferred. Do not add a local-auth fallback or imply that the temporary provisioning tool authenticates users.
-3. **Type-quality owner:** triage the 58 existing check errors and identify which are extraction blockers versus pre-existing defects. M0 does not authorize broad unrelated cleanup.
-4. **Infrastructure owner:** approve and provision the isolated Directus/database environment and the network/operator controls required by the guarded provisioning tool. The Compose definition is present and schema-valid, but the Docker daemon was unavailable, so runtime health and connectivity remain unverified.
+3. **Type-quality owner:** triage the 57 existing check errors and identify which are extraction blockers versus pre-existing defects. M0 does not authorize broad unrelated cleanup.
+4. **Infrastructure owner:** approve and provision the isolated Directus/database environment and the network/operator controls required by the guarded provisioning tool. The local Compose backend is now running and verified; deployment-equivalent infrastructure and the application container remain blocked by the legacy signup build failure.
 5. **Deployment owner:** provide authorized read-only access to the deployed artifact/configuration and an approved staging environment for rollback rehearsal. Local repository files alone do not prove the deployed rollback path.
 6. **Future auth owner:** still unidentified; authentication remains a later-project dependency and is not represented as complete by this extraction.
 
-**M0 disposition:** M0 is **not complete**. Repository inventory, deployment-file inventory, Compose schema validation, package-script repair, and local baseline attempts are complete. The exit gate remains blocked by the unavailable isolated backend, unavailable deployment evidence, Vitest startup failure, Svelte diagnostics, and the legacy signup build failure. Authentication is intentionally not a blocker because it is deferred. M1 may begin after the baseline blockers are dispositioned and the provisioning boundary is approved.
+**M0 disposition:** M0 is **not complete**. Repository inventory, deployment-file inventory, Compose schema validation, isolated PostgreSQL/Directus startup and health verification, package-script repair, Vitest startup repair, and local baseline attempts are complete. The exit gate remains blocked by unavailable deployment/rollback evidence, two existing deterministic-suite defects, Svelte diagnostics, and the legacy signup build failure preventing the carpool image from being built. Authentication is intentionally not a blocker because it is deferred. M1 may begin after the remaining baseline blockers are dispositioned and the provisioning boundary is approved.
 
 ### M1 / Plan 1.1 - Establish provisioning boundary and regression protection
 

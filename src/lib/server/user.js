@@ -16,7 +16,7 @@ import { getBackendClient } from './client.js'
 import { error, redirect } from '@sveltejs/kit'
 import jsonwebtoken from 'jsonwebtoken'
 import { createSecretKey } from 'node:crypto'
-import { JWT_SECRET } from '$env/static/private'
+import { env } from '$env/dynamic/private'
 
 const debug = createDebugMessages('APP:$lib/server/user')
 
@@ -528,7 +528,7 @@ export default class User {
 
 
   static #getJWTSecret() {
-    const secret = import.meta.env.JWT_SECRET || JWT_SECRET;
+    const secret = env.JWT_SECRET;
     if (!secret) {
       throw new Error('Server configuration error: JWT secret is not set');
     }
